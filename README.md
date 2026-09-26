@@ -113,7 +113,7 @@ const APPS_SCRIPT_URL = "https://script.google.com/macros/s/XXXXX/exec";
 | File | Vai trò |
 |---|---|
 | `index.html` | Khung 4 màn hình: Đăng nhập (có tab Nhân viên/Quản trị) / Checklist / Trang Quản trị / Hoàn tất |
-| `style.css` | Giao diện theo bộ nhận diện AHT (navy #234093, teal #42C1C7, đỏ #982E20, font Noto Serif Display + Noto Sans) |
+| `style.css` | Giao diện theo bộ nhận diện AHT (navy #234093, teal #42C1C7, đỏ #982E20, font Times New Roman) |
 | `app.js` | Toàn bộ logic: đăng nhập (nhân viên/admin), tải danh sách động từ Sheet, nén ảnh, gửi dữ liệu, thống kê & gửi email từ Trang Quản trị |
 | `config.js` | Nơi duy nhất cần sửa URL Apps Script |
 | `Code.gs` | Backend Apps Script: xác thực, ghi Sheet, upload ảnh Drive, tạo PDF, gửi email, thống kê Admin |
@@ -128,6 +128,25 @@ const APPS_SCRIPT_URL = "https://script.google.com/macros/s/XXXXX/exec";
 3. **Gửi email tùy chỉnh** — tick chọn 1 hoặc nhiều hạng mục Không đạt → nhập email người nhận + nội dung tự soạn → gửi. Ảnh minh chứng được lấy lại từ Google Drive và **đính kèm dạng file riêng** (không nhúng trong nội dung email).
 
 > Lưu ý: nếu bạn đổi tên/nội dung 3 ca trong `index.html` (mục `fieldCa`), phải sửa lại đúng y hệt trong hằng số `CA_LIST` ở đầu `Code.gs` để việc tính "ca thiếu" luôn chính xác.
+
+## Cảnh báo tự động khi thiếu checklist theo ca
+
+Hệ thống tự kiểm tra định kỳ và **tự gửi email cảnh báo** (không cần ai mở trang web) nếu 1 ca kết thúc mà chưa có checklist nào được chấm. Vì Ca đêm vắt qua nửa đêm (22:00–06:00 hôm sau), thuật toán kiểm tra Ca đêm sẽ nới lỏng: chấp nhận checklist ghi Ngày = hôm qua **hoặc** hôm nay (đề phòng nhân viên chấm trễ sau 0h quên đổi ngày).
+
+**Điều kiện bắt buộc:** phải điền `MANAGER_EMAIL` ở đầu `Code.gs` — nếu để trống, cảnh báo sẽ không có người nhận nên hệ thống tự bỏ qua, không báo lỗi.
+
+Sau khi deploy `Code.gs` (Deploy → Manage deployments → New version), vào thiết lập 3 Trigger sau:
+
+1. Trong Apps Script, bấm biểu tượng **đồng hồ (Triggers)** ở thanh bên trái.
+2. Bấm **+ Add Trigger** (góc dưới phải), lặp lại 3 lần với cấu hình:
+
+| Trigger # | Choose which function to run | Select event source | Select type of time based trigger | Select time |
+|---|---|---|---|---|
+| 1 | `kiemTraCaSang` | Time-driven | Day timer | 2pm to 3pm (14:00–15:00) |
+| 2 | `kiemTraCaChieu` | Time-driven | Day timer | 10pm to 11pm (22:00–23:00) |
+| 3 | `kiemTraCaDem` | Time-driven | Day timer | 6am to 7am (06:00–07:00) |
+
+Apps Script chỉ cho chọn khung giờ 1 tiếng (không chọn được chính xác phút), hệ thống sẽ tự chạy vào một thời điểm ngẫu nhiên trong khung đó — vẫn đảm bảo đúng logic vì luôn kiểm tra dữ liệu **sau khi ca đã kết thúc**.
 
 ## Những điểm có thể tuỳ chỉnh thêm sau
 

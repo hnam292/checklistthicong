@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Checklist Giám sát Thi công · AHT</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ============ TOAST / LOADING OVERLAY ============ -->
+  <div id="overlay" class="overlay hidden">
+    <div class="spinner"></div>
+    <div id="overlayText" class="overlay-text">Đang xử lý...</div>
+  </div>
+  <div id="toast" class="toast hidden"></div>
+
+  <!-- ============ VIEW: LOGIN ============ -->
+  <section id="view-login" class="view">
+    <div class="login-wrap">
+      <img src="logo.png" alt="Logo AHT" class="login-logo">
+      <h1 class="login-title">Checklist Giám sát<br>Thi công</h1>
+      <p class="login-subtitle">Nhà ga T2 · Da Nang International Terminal</p>
+
+      <div class="role-tabs" role="tablist">
+        <button type="button" class="role-tab active" data-role="staff" id="roleTabStaff">Nhân viên</button>
+        <button type="button" class="role-tab" data-role="admin" id="roleTabAdmin">Quản trị</button>
+      </div>
+
+      <form id="loginForm" class="card login-card">
+        <label for="username">Tên đăng nhập</label>
+        <input id="username" name="username" type="text" placeholder="Nhập tên đăng nhập" autocomplete="username" required>
+
+        <label for="password">Mật khẩu</label>
+        <input id="password" name="password" type="password" placeholder="Nhập mật khẩu" autocomplete="current-password" required>
+
+        <div id="loginError" class="field-error hidden"></div>
+
+        <button type="submit" id="loginSubmitBtn" class="btn btn-primary btn-block">Đăng nhập</button>
+      </form>
+
+      <p class="login-footer">© AHT — Da Nang International Terminal</p>
+    </div>
+  </section>
+
+  <!-- ============ VIEW: CHECKLIST ============ -->
+  <section id="view-checklist" class="view hidden">
+    <header class="app-header">
+      <img src="logo.png" alt="Logo AHT" class="header-logo">
+      <div>
+        <div class="header-title">Checklist Giám sát Thi công</div>
+        <div class="header-subtitle">Nhà ga T2</div>
+      </div>
+      <button id="logoutBtn" class="header-logout" type="button" aria-label="Đăng xuất">Đăng xuất</button>
+    </header>
+
+    <div class="checklist-scroll">
+
+      <div class="card info-card">
+        <div class="info-row">
+          <label for="fieldNgay"><svg class="label-icon" width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1.5" y="2.5" width="10" height="9" rx="1.3" stroke="currentColor" stroke-width="1.1"/><path d="M1.5 5H11.5M4 1.3V3M9 1.3V3" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>Ngày thực hiện</label>
+          <input id="fieldNgay" type="date" required>
+        </div>
+        <div class="info-row">
+          <label for="fieldCa"><svg class="label-icon" width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.1"/><path d="M6.5 3.5V6.5L8.5 8" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>Ca thực hiện</label>
+          <select id="fieldCa" required>
+            <option value="" disabled selected>Chọn ca</option>
+            <option value="Ca sáng (06:00–14:00)">Ca sáng (06:00–14:00)</option>
+            <option value="Ca chiều (14:00–22:00)">Ca chiều (14:00–22:00)</option>
+            <option value="Ca đêm (22:00–06:00)">Ca đêm (22:00–06:00)</option>
+          </select>
+        </div>
+        <div class="info-row">
+          <label for="fieldNguoiThucHien"><svg class="label-icon" width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="4.3" r="2.3" stroke="currentColor" stroke-width="1.1"/><path d="M2 11.3C2.5 8.8 4.3 7.7 6.5 7.7C8.7 7.7 10.5 8.8 11 11.3" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>Người thực hiện</label>
+          <select id="fieldNguoiThucHien" required>
+            <option value="" disabled selected>Chọn tên theo danh sách</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="progress-block">
+        <div class="progress-labels">
+          <span>Tiến độ checklist</span>
+          <span id="progressCount">0/0</span>
+        </div>
+        <div class="progress-track">
+          <div id="progressFill" class="progress-fill" style="width:0%"></div>
+        </div>
+      </div>
+
+      <div class="section-title">Nội dung checklist</div>
+
+      <div id="itemsList"></div>
+
+    </div>
+
+    <div class="submit-bar">
+      <div id="submitError" class="field-error hidden"></div>
+      <button id="submitBtn" class="btn btn-primary btn-block" type="button">Hoàn tất &amp; Gửi báo cáo</button>
+    </div>
+  </section>
+
+  <!-- ============ VIEW: ADMIN ============ -->
+  <section id="view-admin" class="view hidden">
+    <header class="app-header">
+      <img src="logo.png" alt="Logo AHT" class="header-logo">
+      <div>
+        <div class="header-title">Trang Quản trị</div>
+        <div class="header-subtitle">Checklist Thi công · Nhà ga T2</div>
+      </div>
+      <button id="adminLogoutBtn" class="header-logout" type="button" aria-label="Đăng xuất">Đăng xuất</button>
+    </header>
+
+    <div class="admin-scroll">
+
+      <div class="card admin-filter-card">
+        <div class="admin-filter-row">
+          <div class="info-row">
+            <label for="adminTuNgay">Từ ngày</label>
+            <input id="adminTuNgay" type="date">
+          </div>
+          <div class="info-row">
+            <label for="adminDenNgay">Đến ngày</label>
+            <input id="adminDenNgay" type="date">
+          </div>
+        </div>
+        <button id="adminFilterBtn" type="button" class="btn btn-primary btn-block">Xem thống kê</button>
+      </div>
+
+      <!-- Mục 1: Ca bị thiếu checklist -->
+      <div class="admin-section-title">Ca bị thiếu checklist</div>
+      <div id="adminMissingBox"></div>
+
+      <!-- Mục 2: Hạng mục Không đạt -->
+      <div class="admin-section-title">Hạng mục Không đạt trong khoảng thời gian</div>
+      <div id="adminFailedBox"></div>
+
+      <!-- Mục 3: khung soạn email -->
+      <div id="adminComposePanel" class="card admin-compose-panel hidden">
+        <div class="admin-compose-title">Soạn email gửi hạng mục đã chọn</div>
+        <div id="adminComposeSummary" class="admin-compose-summary"></div>
+
+        <label for="adminRecipientEmail">Email người nhận</label>
+        <input id="adminRecipientEmail" type="text" placeholder="vd: a@aht.com.vn, b@aht.com.vn">
+
+        <label for="adminMessage">Nội dung email</label>
+        <textarea id="adminMessage" rows="4" placeholder="Nhập nội dung gửi kèm (không bắt buộc)..."></textarea>
+
+        <div id="adminSendError" class="field-error hidden"></div>
+
+        <div class="admin-compose-actions">
+          <button id="adminCancelSendBtn" type="button" class="btn btn-outline btn-block">Hủy</button>
+          <button id="adminSendBtn" type="button" class="btn btn-primary btn-block">Gửi email</button>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ VIEW: COMPLETE ============ -->
+  <section id="view-complete" class="view hidden">
+    <div class="complete-wrap">
+      <svg width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="36" cy="36" r="36" fill="#42C1C7"/>
+        <path d="M22 37L31 46L50 26" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+
+      <h1 class="complete-title">Đã gửi báo cáo thành công</h1>
+      <p id="completeMeta" class="complete-meta"></p>
+
+      <div class="stat-row">
+        <div class="stat-box">
+          <div id="statDat" class="stat-num stat-dat">0</div>
+          <div class="stat-label">Đạt</div>
+        </div>
+        <div class="stat-box">
+          <div id="statKhongDat" class="stat-num stat-khongdat">0</div>
+          <div class="stat-label">Không đạt</div>
+        </div>
+        <div class="stat-box">
+          <div id="statTotal" class="stat-num stat-total">0</div>
+          <div class="stat-label">Tổng mục</div>
+        </div>
+      </div>
+
+      <div class="card email-note">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="2" y="3" width="14" height="12" rx="2" stroke="#234093" stroke-width="1.4"/>
+          <path d="M2.5 4.5L9 9.5L15.5 4.5" stroke="#234093" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>Báo cáo PDF đã được gửi đến <b id="completeEmail"></b><span id="completeCcNote"></span>.</span>
+      </div>
+
+      <div class="complete-actions">
+        <button id="newChecklistBtn" class="btn btn-primary btn-block" type="button">Thực hiện checklist mới</button>
+        <button id="homeBtn" class="btn btn-outline btn-block" type="button">Về trang chủ</button>
+      </div>
+    </div>
+  </section>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
