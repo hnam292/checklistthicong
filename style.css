@@ -197,17 +197,18 @@ input[type="text"], input[type="password"], input[type="date"], select, textarea
 }
 
 .item-card {
-  border: 1px solid var(--border);
+  border: 1.5px dashed #C7CEDA;
   border-left: 3px solid var(--border);
   border-radius: 12px;
   padding: 14px;
   margin-bottom: 12px;
   background: #FFFFFF;
   box-shadow: 0 1px 3px rgba(17, 41, 86, 0.05);
-  transition: border-color .15s ease, box-shadow .15s ease;
+  transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
 }
-.item-card.card-dat { border-left-color: var(--teal); }
-.item-card.card-khongdat { border-left-color: var(--red); box-shadow: 0 1px 4px rgba(152, 46, 32, 0.12); }
+.item-card.card-pending { background: #FCFCFD; }
+.item-card.card-dat { border: 1px solid var(--border); border-left-color: var(--teal); }
+.item-card.card-khongdat { border: 1px solid var(--border); border-left-color: var(--red); box-shadow: 0 1px 4px rgba(152, 46, 32, 0.12); background: #FFFDFC; }
 .item-top { display: flex; gap: 10px; align-items: flex-start; }
 .item-num {
   min-width: 26px; height: 26px; border-radius: 50%;
@@ -216,6 +217,13 @@ input[type="text"], input[type="password"], input[type="date"], select, textarea
   font-size: 12px; font-weight: 700; flex-shrink: 0;
 }
 .item-text { flex-grow: 1; font-size: 13.5px; line-height: 1.45; }
+.item-status-dot {
+  width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+  border: 1.5px dashed #C7CEDA;
+  display: flex; align-items: center; justify-content: center;
+}
+.item-status-dot.dot-dat { background: var(--teal); border: none; color: #FFFFFF; }
+.item-status-dot.dot-khongdat { background: var(--red); border: none; color: #FFFFFF; }
 
 .item-actions { display: flex; gap: 8px; margin-top: 12px; }
 .status-btn {

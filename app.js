@@ -227,7 +227,8 @@ function renderItems() {
       top.className = "item-top";
       top.innerHTML =
         '<div class="item-num">' + item.stt + '</div>' +
-        '<div class="item-text"></div>';
+        '<div class="item-text"></div>' +
+        '<div class="item-status-dot" title="Chưa chấm"></div>';
       top.querySelector(".item-text").textContent = item.hangMuc;
       card.appendChild(top);
 
@@ -283,8 +284,9 @@ function renderItems() {
       wrap.appendChild(card);
 
       // lưu tham chiếu để cập nhật giao diện khi status đổi
-      item._el = { card, btnDat, btnFail, failPanel };
+      item._el = { card, btnDat, btnFail, failPanel, statusDot: top.querySelector(".item-status-dot") };
       item._group = group;
+      card.classList.add("card-pending");
     });
   });
 }
@@ -292,12 +294,15 @@ function renderItems() {
 function setStatus(idx, status, group) {
   const item = state.items[idx];
   item.tinhTrang = status;
-  const { card, btnDat, btnFail, failPanel } = item._el;
+  const { card, btnDat, btnFail, failPanel, statusDot } = item._el;
   btnDat.classList.toggle("active", status === "Đạt");
   btnFail.classList.toggle("active", status === "Không đạt");
   failPanel.classList.toggle("hidden", status !== "Không đạt");
-  card.classList.remove("card-dat", "card-khongdat");
+  card.classList.remove("card-dat", "card-khongdat", "card-pending");
   card.classList.add(status === "Đạt" ? "card-dat" : "card-khongdat");
+  statusDot.className = "item-status-dot " + (status === "Đạt" ? "dot-dat" : "dot-khongdat");
+  statusDot.innerHTML = status === "Đạt" ? ICON_CHECK : ICON_CROSS;
+  statusDot.title = status;
 
   if (group && group._headerEl) {
     const doneInGroup = group.indices.filter((i) => state.items[i].tinhTrang).length;

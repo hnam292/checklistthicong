@@ -142,11 +142,7 @@ function getOrCreateFolder(name) {
 
 // data URL dạng "data:image/jpeg;base64,...."
 function uploadImageToDrive(dataUrl, fileName, folder) {
-  const match = dataUrl.match(/^data:(.*?);base64,(.*)$/);
-  const mimeType = match ? match[1] : "image/jpeg";
-  const base64 = match ? match[2] : dataUrl;
-  const bytes = Utilities.base64Decode(base64);
-  const blob = Utilities.newBlob(bytes, mimeType, fileName);
+  const blob = dataUrlToBlob(dataUrl, fileName);
   const file = folder.createFile(blob);
   file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
   return file.getUrl();
@@ -201,6 +197,7 @@ function renderReportHtml(data) {
           const isFail = it.tinhTrang === "Không đạt";
           const badgeBg = isFail ? "#FBEEEC" : "#EAF7F7";
           const badgeColor = isFail ? COLOR.red : COLOR.tealText;
+          const accentColor = isFail ? COLOR.red : COLOR.teal;
           const rowBg = idx % 2 === 0 ? "#FFFFFF" : "#FAFBFD";
           const imgTag =
             isFail && it.anhBase64
@@ -209,25 +206,25 @@ function renderReportHtml(data) {
               : "";
           return (
             '<tr style="background:' + rowBg + ';">' +
-            '<td style="padding:9px 8px;border:1px solid ' + COLOR.border + ';text-align:center;vertical-align:top;font-weight:700;color:' + COLOR.navyDark + ';width:34px;">' + esc(it.stt) + "</td>" +
-            '<td style="padding:9px 10px;border:1px solid ' + COLOR.border + ';vertical-align:top;line-height:1.45;">' + esc(it.hangMuc) + "</td>" +
-            '<td style="padding:9px 8px;border:1px solid ' + COLOR.border + ';text-align:center;vertical-align:top;width:78px;">' +
-              '<span style="display:inline-block;padding:3px 10px;border-radius:20px;background:' + badgeBg + ';color:' + badgeColor + ';font-weight:700;font-size:10px;">' + esc(it.tinhTrang) + "</span>" +
+            '<td style="padding:10px 8px;border-bottom:2px solid ' + COLOR.border + ';border-left:5px solid ' + accentColor + ';text-align:center;vertical-align:top;font-weight:700;color:' + COLOR.navyDark + ';width:34px;">' + esc(it.stt) + "</td>" +
+            '<td style="padding:10px 10px;border-bottom:2px solid ' + COLOR.border + ';border-right:1px solid ' + COLOR.border + ';vertical-align:top;line-height:1.5;">' + esc(it.hangMuc) + "</td>" +
+            '<td style="padding:10px 8px;border-bottom:2px solid ' + COLOR.border + ';border-right:1px solid ' + COLOR.border + ';text-align:center;vertical-align:top;width:82px;">' +
+              '<span style="display:inline-block;padding:3px 10px;border-radius:20px;background:' + badgeBg + ';color:' + badgeColor + ';font-weight:700;font-size:10px;white-space:nowrap;">' + esc(it.tinhTrang) + "</span>" +
             "</td>" +
-            '<td style="padding:9px 10px;border:1px solid ' + COLOR.border + ';vertical-align:top;width:220px;line-height:1.4;">' + (esc(it.ghiChu) || '<span style="color:#B7BEC9;">—</span>') + imgTag + "</td>" +
+            '<td style="padding:10px 10px;border-bottom:2px solid ' + COLOR.border + ';border-right:1px solid ' + COLOR.border + ';vertical-align:top;width:220px;line-height:1.4;">' + (esc(it.ghiChu) || '<span style="color:#B7BEC9;">—</span>') + imgTag + "</td>" +
             "</tr>"
           );
         })
         .join("");
 
       return (
-        '<div style="margin-top:16px;padding:6px 0 6px 10px;border-left:4px solid ' + COLOR.navy + ';font-family:Georgia,\'Times New Roman\',serif;font-weight:700;font-size:12.5px;color:' + COLOR.navyDark + ';">' + esc(g.title) + " (" + g.items.length + " mục)</div>" +
-        '<table style="border-collapse:collapse;width:100%;font-size:10.5px;margin-top:6px;font-family:Arial,Helvetica,sans-serif;color:' + COLOR.text + ';">' +
+        '<div style="margin-top:20px;padding:6px 0 6px 10px;border-left:4px solid ' + COLOR.navy + ';font-family:Georgia,\'Times New Roman\',serif;font-weight:700;font-size:12.5px;color:' + COLOR.navyDark + ';">' + esc(g.title) + " (" + g.items.length + " mục)</div>" +
+        '<table style="border-collapse:collapse;width:100%;font-size:10.5px;margin-top:6px;font-family:Arial,Helvetica,sans-serif;color:' + COLOR.text + ';border:1px solid ' + COLOR.border + ';">' +
         "<thead><tr>" +
-        '<th style="padding:8px;border:1px solid ' + COLOR.navy + ';background:' + COLOR.navy + ';color:#fff;font-size:10px;">STT</th>' +
-        '<th style="padding:8px;border:1px solid ' + COLOR.navy + ';background:' + COLOR.navy + ';color:#fff;font-size:10px;text-align:left;">Hạng mục</th>' +
-        '<th style="padding:8px;border:1px solid ' + COLOR.navy + ';background:' + COLOR.navy + ';color:#fff;font-size:10px;">Tình trạng</th>' +
-        '<th style="padding:8px;border:1px solid ' + COLOR.navy + ';background:' + COLOR.navy + ';color:#fff;font-size:10px;text-align:left;">Ghi chú / Minh chứng</th>' +
+        '<th style="padding:8px;border-right:1px solid rgba(255,255,255,0.25);background:' + COLOR.navy + ';color:#fff;font-size:10px;">STT</th>' +
+        '<th style="padding:8px;border-right:1px solid rgba(255,255,255,0.25);background:' + COLOR.navy + ';color:#fff;font-size:10px;text-align:left;">Hạng mục</th>' +
+        '<th style="padding:8px;border-right:1px solid rgba(255,255,255,0.25);background:' + COLOR.navy + ';color:#fff;font-size:10px;">Tình trạng</th>' +
+        '<th style="padding:8px;background:' + COLOR.navy + ';color:#fff;font-size:10px;text-align:left;">Ghi chú / Minh chứng</th>' +
         "</tr></thead><tbody>" + rows + "</tbody></table>"
       );
     })
@@ -295,19 +292,34 @@ function renderReportHtml(data) {
 // ---------- EMAIL ----------
 // Trả về true nếu có gửi CC cho quản lý (MANAGER_EMAIL đã cấu hình)
 function sendReportEmail(toEmail, data, pdfBlob) {
-  const subject = "Báo cáo Checklist Thi công - " + data.ngay + " (" + data.ca + ")";
-  const htmlBody = renderEmailHtml(data);
-  const plainBody =
-    "Báo cáo checklist giám sát thi công ca " + data.ca + " ngày " + data.ngay + " đã hoàn tất.\n" +
-    "Tổng: " + data.total + " mục | Đạt: " + data.dat + " | Không đạt: " + data.khongDat + "\n" +
-    "Chi tiết xem file PDF đính kèm.";
+  const allPass = data.khongDat === 0;
+  const subject =
+    (allPass ? "✓ Đạt toàn bộ" : "⚠ Có " + data.khongDat + " mục không đạt") +
+    " — Checklist Thi công " + data.ngay + " (" + data.ca + ")";
 
   const logoBlob = Utilities.newBlob(Utilities.base64Decode(LOGO_BASE64), "image/png", "logo.png");
+  const inlineImages = { logoAht: logoBlob };
+
+  // Chỉ đính kèm ảnh minh chứng của các hạng mục Không đạt, mỗi ảnh 1 cid riêng
+  const failedItems = data.items.filter((i) => i.tinhTrang === "Không đạt");
+  failedItems.forEach((it, idx) => {
+    if (!it.anhBase64) return;
+    const cid = "fail_" + idx;
+    inlineImages[cid] = dataUrlToBlob(it.anhBase64, "khongdat_" + it.stt + ".jpg");
+    it._cid = cid; // dùng lại khi render HTML
+  });
+
+  const htmlBody = renderEmailHtml(data, allPass, failedItems);
+  const plainBody = allPass
+    ? "Checklist thi công ca " + data.ca + " ngày " + data.ngay + ": TẤT CẢ " + data.total + "/" + data.total + " hạng mục đều đạt yêu cầu.\nChi tiết xem file PDF đính kèm."
+    : "Checklist thi công ca " + data.ca + " ngày " + data.ngay + " có " + data.khongDat + "/" + data.total + " hạng mục KHÔNG ĐẠT, cần xử lý:\n" +
+      failedItems.map((i) => "- #" + i.stt + " " + i.hangMuc + (i.ghiChu ? " (Ghi chú: " + i.ghiChu + ")" : "")).join("\n") +
+      "\n\nChi tiết đầy đủ + ảnh minh chứng xem file PDF đính kèm.";
 
   const hasManager = !!MANAGER_EMAIL;
   const mailOptions = {
     attachments: [pdfBlob],
-    inlineImages: { logoAht: logoBlob },
+    inlineImages: inlineImages,
     name: "Hệ thống Checklist AHT",
     htmlBody: htmlBody,
     body: plainBody,
@@ -321,31 +333,16 @@ function sendReportEmail(toEmail, data, pdfBlob) {
   return hasManager;
 }
 
-function renderEmailHtml(data) {
-  const rows = data.items
-    .map((it, idx) => {
-      const isFail = it.tinhTrang === "Không đạt";
-      const badgeBg = isFail ? "#FBEEEC" : "#EAF7F7";
-      const badgeColor = isFail ? COLOR.red : COLOR.tealText;
-      const rowBg = idx % 2 === 0 ? "#FFFFFF" : "#FAFBFD";
-      const note = isFail ? (esc(it.ghiChu) || "—") + (it.anhBase64 ? " (xem ảnh trong PDF đính kèm)" : "") : "—";
-      return (
-        '<tr style="background:' + rowBg + ';">' +
-        '<td style="padding:8px;border:1px solid ' + COLOR.border + ';text-align:center;font-weight:700;color:' + COLOR.navyDark + ';">' + esc(it.stt) + "</td>" +
-        '<td style="padding:8px;border:1px solid ' + COLOR.border + ';">' + esc(it.hangMuc) + "</td>" +
-        '<td style="padding:8px;border:1px solid ' + COLOR.border + ';text-align:center;">' +
-          '<span style="display:inline-block;padding:3px 9px;border-radius:16px;background:' + badgeBg + ';color:' + badgeColor + ';font-weight:700;font-size:11px;">' + esc(it.tinhTrang) + "</span>" +
-        "</td>" +
-        '<td style="padding:8px;border:1px solid ' + COLOR.border + ';font-size:12px;color:' + COLOR.textMuted + ';">' + note + "</td>" +
-        "</tr>"
-      );
-    })
-    .join("");
+// data URL "data:image/jpeg;base64,...." → Blob (dùng chung cho Drive + email inline)
+function dataUrlToBlob(dataUrl, fileName) {
+  const match = dataUrl.match(/^data:(.*?);base64,(.*)$/);
+  const mimeType = match ? match[1] : "image/jpeg";
+  const base64 = match ? match[2] : dataUrl;
+  return Utilities.newBlob(Utilities.base64Decode(base64), mimeType, fileName);
+}
 
+function emailHeader() {
   return (
-    '<div style="font-family:Arial,Helvetica,sans-serif;color:' + COLOR.text + ';max-width:640px;margin:0 auto;">' +
-
-    // Header
     '<table role="presentation" width="100%" style="border-collapse:collapse;">' +
     '<tr><td style="background:' + COLOR.navy + ';padding:18px 22px;border-radius:10px 10px 0 0;" bgcolor="' + COLOR.navy + '">' +
     '<table role="presentation"><tr>' +
@@ -354,45 +351,98 @@ function renderEmailHtml(data) {
     '<div style="font-family:Georgia,\'Times New Roman\',serif;font-weight:700;font-size:16px;color:#FFFFFF;">Checklist Giám sát Thi công</div>' +
     '<div style="font-size:11px;color:#C9D3EA;margin-top:2px;">Nhà ga T2 · Da Nang International Terminal</div>' +
     "</td></tr></table>" +
-    "</td></tr></table>" +
+    "</td></tr></table>"
+  );
+}
 
-    // Body card
-    '<table role="presentation" width="100%" style="border-collapse:collapse;border:1px solid ' + COLOR.border + ';border-top:none;border-radius:0 0 10px 10px;">' +
-    '<tr><td style="padding:22px;">' +
-
-    '<p style="font-size:13.5px;line-height:1.6;margin:0 0 14px;">Xin chào <b>' + esc(data.nguoiThucHien) + '</b>,<br>Báo cáo checklist giám sát thi công đã hoàn tất với thông tin sau:</p>' +
-
-    // meta table
+function emailMetaAndStats(data) {
+  return (
     '<table role="presentation" width="100%" style="border-collapse:collapse;background:' + COLOR.bg + ';border:1px solid ' + COLOR.border + ';border-radius:8px;margin-bottom:16px;font-size:12px;">' +
     '<tr>' +
     '<td style="padding:10px 14px;">Ngày: <b>' + esc(data.ngay) + '</b></td>' +
     '<td style="padding:10px 14px;border-left:1px solid ' + COLOR.border + ';">Ca: <b>' + esc(data.ca) + '</b></td>' +
+    '<td style="padding:10px 14px;border-left:1px solid ' + COLOR.border + ';">Người thực hiện: <b>' + esc(data.nguoiThucHien) + '</b></td>' +
     "</tr></table>" +
 
-    // stat row
     '<table role="presentation" width="100%" style="border-collapse:separate;border-spacing:8px 0;margin-bottom:18px;">' +
     "<tr>" +
     '<td style="width:33%;text-align:center;border:1px solid ' + COLOR.border + ';border-radius:8px;padding:14px 4px;"><div style="font-family:Georgia,serif;font-weight:700;font-size:22px;color:' + COLOR.navyDark + ';">' + data.total + '</div><div style="font-size:10.5px;color:' + COLOR.textMuted + ';margin-top:2px;">Tổng số mục</div></td>' +
     '<td style="width:33%;text-align:center;border:1px solid ' + COLOR.border + ';border-radius:8px;padding:14px 4px;"><div style="font-family:Georgia,serif;font-weight:700;font-size:22px;color:' + COLOR.tealText + ';">' + data.dat + '</div><div style="font-size:10.5px;color:' + COLOR.textMuted + ';margin-top:2px;">Đạt</div></td>' +
     '<td style="width:33%;text-align:center;border:1px solid ' + COLOR.border + ';border-radius:8px;padding:14px 4px;"><div style="font-family:Georgia,serif;font-weight:700;font-size:22px;color:' + COLOR.red + ';">' + data.khongDat + '</div><div style="font-size:10.5px;color:' + COLOR.textMuted + ';margin-top:2px;">Không đạt</div></td>' +
-    "</tr></table>" +
+    "</tr></table>"
+  );
+}
 
-    '<div style="font-family:Georgia,\'Times New Roman\',serif;font-weight:700;font-size:13.5px;color:' + COLOR.navyDark + ';margin-bottom:8px;">Chi tiết checklist</div>' +
+function emailFooter() {
+  return (
+    '<p style="font-size:11.5px;color:' + COLOR.textMuted + ';margin-top:16px;">Báo cáo PDF đầy đủ 20 hạng mục (kèm ảnh minh chứng) được đính kèm trong email này.</p>' +
+    "</td></tr></table>" +
+    '<p style="font-size:10.5px;color:#9AA3B0;text-align:center;margin-top:14px;">© AHT — Da Nang International Terminal · Email tự động, vui lòng không trả lời.</p>'
+  );
+}
 
-    '<table role="presentation" width="100%" style="border-collapse:collapse;font-size:12px;">' +
-    "<thead><tr>" +
-    '<th style="padding:8px;border:1px solid ' + COLOR.navy + ';background:' + COLOR.navy + ';color:#fff;font-size:10.5px;" bgcolor="' + COLOR.navy + '">STT</th>' +
-    '<th style="padding:8px;border:1px solid ' + COLOR.navy + ';background:' + COLOR.navy + ';color:#fff;font-size:10.5px;text-align:left;" bgcolor="' + COLOR.navy + '">Hạng mục</th>' +
-    '<th style="padding:8px;border:1px solid ' + COLOR.navy + ';background:' + COLOR.navy + ';color:#fff;font-size:10.5px;" bgcolor="' + COLOR.navy + '">Tình trạng</th>' +
-    '<th style="padding:8px;border:1px solid ' + COLOR.navy + ';background:' + COLOR.navy + ';color:#fff;font-size:10.5px;text-align:left;" bgcolor="' + COLOR.navy + '">Ghi chú</th>' +
-    "</tr></thead><tbody>" + rows + "</tbody></table>" +
+function renderEmailHtml(data, allPass, failedItems) {
+  const bodyOpenWrap =
+    '<div style="font-family:Arial,Helvetica,sans-serif;color:' + COLOR.text + ';max-width:640px;margin:0 auto;">' +
+    emailHeader() +
+    '<table role="presentation" width="100%" style="border-collapse:collapse;border:1px solid ' + COLOR.border + ';border-top:none;border-radius:0 0 10px 10px;">' +
+    '<tr><td style="padding:22px;">';
 
-    '<p style="font-size:11.5px;color:' + COLOR.textMuted + ';margin-top:16px;">Báo cáo PDF đầy đủ (kèm ảnh minh chứng) được đính kèm trong email này.</p>' +
+  if (allPass) {
+    // ---- TRƯỜNG HỢP 1: TẤT CẢ ĐỀU ĐẠT ----
+    return (
+      bodyOpenWrap +
 
+      '<table role="presentation" width="100%" style="border-collapse:collapse;background:#EAF7F7;border:1px solid ' + COLOR.teal + ';border-radius:10px;margin-bottom:18px;">' +
+      '<tr><td style="padding:16px 18px;text-align:center;">' +
+      '<div style="font-family:Georgia,\'Times New Roman\',serif;font-weight:700;font-size:16px;color:' + COLOR.tealText + ';">✓ Tất cả hạng mục đều đạt yêu cầu</div>' +
+      '<div style="font-size:12.5px;color:' + COLOR.text + ';margin-top:6px;">Xin chào <b>' + esc(data.nguoiThucHien) + '</b>, checklist giám sát thi công ca <b>' + esc(data.ca) + '</b> ngày <b>' + esc(data.ngay) + '</b> đã hoàn tất — toàn bộ <b>' + data.total + '/' + data.total + ' hạng mục</b> đạt yêu cầu, không phát hiện vấn đề nào cần xử lý.</div>' +
+      "</td></tr></table>" +
+
+      emailMetaAndStats(data) +
+      emailFooter() +
+      "</div>"
+    );
+  }
+
+  // ---- TRƯỜNG HỢP 2: CÓ HẠNG MỤC KHÔNG ĐẠT — chỉ liệt kê các mục này kèm ảnh ----
+  const failRows = failedItems
+    .map((it) => {
+      const imgHtml = it._cid
+        ? '<div style="margin-top:8px;"><img src="cid:' + it._cid + '" width="180" style="border-radius:6px;border:1px solid ' + COLOR.border + ';display:block;"></div>'
+        : '<div style="margin-top:6px;font-size:11px;color:' + COLOR.textMuted + ';">(Không có ảnh đính kèm)</div>';
+      return (
+        '<table role="presentation" width="100%" style="border-collapse:collapse;border:1px solid ' + COLOR.red + ';border-left:4px solid ' + COLOR.red + ';border-radius:8px;margin-bottom:12px;">' +
+        '<tr><td style="padding:14px 16px;">' +
+        '<div style="display:table;width:100%;">' +
+        '<div style="display:table-cell;font-weight:700;color:' + COLOR.navyDark + ';font-size:13px;">#' + esc(it.stt) + " — " + esc(it.hangMuc) + "</div>" +
+        '<div style="display:table-cell;text-align:right;white-space:nowrap;vertical-align:top;">' +
+        '<span style="display:inline-block;padding:3px 10px;border-radius:16px;background:#FBEEEC;color:' + COLOR.red + ';font-weight:700;font-size:10.5px;">Không đạt</span>' +
+        "</div></div>" +
+        '<div style="font-size:12px;color:' + COLOR.text + ';margin-top:8px;"><b>Ghi chú:</b> ' + (esc(it.ghiChu) || "—") + "</div>" +
+        imgHtml +
+        "</td></tr></table>"
+      );
+    })
+    .join("");
+
+  return (
+    bodyOpenWrap +
+
+    '<table role="presentation" width="100%" style="border-collapse:collapse;background:#FBEEEC;border:1px solid ' + COLOR.red + ';border-radius:10px;margin-bottom:18px;">' +
+    '<tr><td style="padding:16px 18px;text-align:center;">' +
+    '<div style="font-family:Georgia,\'Times New Roman\',serif;font-weight:700;font-size:16px;color:' + COLOR.red + ';">⚠ Phát hiện ' + data.khongDat + ' hạng mục không đạt</div>' +
+    '<div style="font-size:12.5px;color:' + COLOR.text + ';margin-top:6px;">Xin chào <b>' + esc(data.nguoiThucHien) + '</b>, checklist giám sát thi công ca <b>' + esc(data.ca) + '</b> ngày <b>' + esc(data.ngay) + '</b> phát hiện <b>' + data.khongDat + '/' + data.total + ' hạng mục không đạt</b>, cần được xử lý và theo dõi khắc phục.</div>' +
     "</td></tr></table>" +
 
-    '<p style="font-size:10.5px;color:#9AA3B0;text-align:center;margin-top:14px;">© AHT — Da Nang International Terminal · Email tự động, vui lòng không trả lời.</p>' +
+    emailMetaAndStats(data) +
 
+    '<div style="font-family:Georgia,\'Times New Roman\',serif;font-weight:700;font-size:13.5px;color:' + COLOR.navyDark + ';margin-bottom:10px;">Danh sách hạng mục không đạt</div>' +
+
+    failRows +
+
+    emailFooter() +
     "</div>"
   );
 }
+
