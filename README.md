@@ -21,6 +21,13 @@ Tạo 1 Google Sheet mới với **đúng 4 tab** sau (tên tab phải khớp ch
 |---|---|
 | giamsat1 | 123456 |
 
+### Tab `TaiKhoanAdmin`
+| Username | Password |
+|---|---|
+| admin | matkhau_admin_ban_tu_chon |
+
+> Tab riêng cho tài khoản **Trang Quản trị** — tách biệt hoàn toàn với tài khoản nhân viên chấm checklist ở tab `TaiKhoan`. Bạn tự thêm tài khoản admin vào đây, không giới hạn số lượng.
+
 ### Tab `NhanSu`
 | STT | Ten | Email |
 |---|---|---|
@@ -105,12 +112,22 @@ const APPS_SCRIPT_URL = "https://script.google.com/macros/s/XXXXX/exec";
 
 | File | Vai trò |
 |---|---|
-| `index.html` | Khung 3 màn hình: Đăng nhập / Checklist / Hoàn tất |
+| `index.html` | Khung 4 màn hình: Đăng nhập (có tab Nhân viên/Quản trị) / Checklist / Trang Quản trị / Hoàn tất |
 | `style.css` | Giao diện theo bộ nhận diện AHT (navy #234093, teal #42C1C7, đỏ #982E20, font Noto Serif Display + Noto Sans) |
-| `app.js` | Toàn bộ logic: đăng nhập, tải danh sách động từ Sheet, nén ảnh, gửi dữ liệu |
+| `app.js` | Toàn bộ logic: đăng nhập (nhân viên/admin), tải danh sách động từ Sheet, nén ảnh, gửi dữ liệu, thống kê & gửi email từ Trang Quản trị |
 | `config.js` | Nơi duy nhất cần sửa URL Apps Script |
-| `Code.gs` | Backend Apps Script: xác thực, ghi Sheet, upload ảnh Drive, tạo PDF, gửi email |
+| `Code.gs` | Backend Apps Script: xác thực, ghi Sheet, upload ảnh Drive, tạo PDF, gửi email, thống kê Admin |
 | `logo.png` | Logo AHT |
+
+## Trang Quản trị
+
+Đăng nhập bằng tài khoản trong tab `TaiKhoanAdmin` (chọn tab **Quản trị** ở màn đăng nhập) để vào Trang Quản trị:
+
+1. **Ca bị thiếu checklist** — chọn khoảng ngày, hệ thống liệt kê những (Ngày, Ca) chưa có dữ liệu nào trong `KetQuaChecklist`. Quy tắc: **mọi ngày trong khoảng đều bắt buộc đủ 3 ca** (Sáng/Chiều/Đêm).
+2. **Hạng mục Không đạt trong khoảng thời gian** — danh sách toàn bộ dòng "Không đạt" trong khoảng đã chọn, kèm ảnh thumbnail xem trực tiếp.
+3. **Gửi email tùy chỉnh** — tick chọn 1 hoặc nhiều hạng mục Không đạt → nhập email người nhận + nội dung tự soạn → gửi. Ảnh minh chứng được lấy lại từ Google Drive và **đính kèm dạng file riêng** (không nhúng trong nội dung email).
+
+> Lưu ý: nếu bạn đổi tên/nội dung 3 ca trong `index.html` (mục `fieldCa`), phải sửa lại đúng y hệt trong hằng số `CA_LIST` ở đầu `Code.gs` để việc tính "ca thiếu" luôn chính xác.
 
 ## Những điểm có thể tuỳ chỉnh thêm sau
 

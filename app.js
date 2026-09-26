@@ -8,9 +8,15 @@ const STORAGE_KEY = "aht_checklist_session";
 
 const state = {
   loggedIn: false,
+  role: "staff", // 'staff' | 'admin' — vai trò đang chọn ở tab đăng nhập
   nhanSu: [],       // [{stt, ten, email}]
   danhMuc: [],       // [{stt, hangMuc}]
   items: [],         // working checklist items with status/ghiChu/anh
+  admin: {
+    missing: [],
+    failed: [],
+    selectedIds: new Set(),
+  },
 };
 
 // ---------- Helpers DOM ----------
@@ -35,7 +41,7 @@ function showToast(message, isError) {
 }
 
 function showView(name) {
-  ["login", "checklist", "complete"].forEach((v) => {
+  ["login", "checklist", "complete", "admin"].forEach((v) => {
     $("view-" + v).classList.toggle("hidden", v !== name);
   });
 }
@@ -62,9 +68,9 @@ function fetchInitData() {
 }
 
 // ---------- Session ----------
-function saveSession() {
+function saveSession(role) {
   try {
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ loggedIn: true }));
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ loggedIn: true, role: role }));
   } catch (e) { /* ignore */ }
 }
 function clearSession() {
@@ -72,13 +78,26 @@ function clearSession() {
     sessionStorage.removeItem(STORAGE_KEY);
   } catch (e) { /* ignore */ }
 }
-function hasSession() {
+function getSession() {
   try {
     const raw = sessionStorage.getItem(STORAGE_KEY);
-    return raw && JSON.parse(raw).loggedIn === true;
+    const parsed = raw ? JSON.parse(raw) : null;
+    return parsed && parsed.loggedIn ? parsed : null;
   } catch (e) {
-    return false;
+    return null;
   }
+}
+
+// ---------- Role tabs (màn đăng nhập) ----------
+$("roleTabStaff").addEventListener("click", () => setLoginRole("staff"));
+$("roleTabAdmin").addEventListener("click", () => setLoginRole("admin"));
+
+function setLoginRole(role) {
+  state.role = role;
+  $("roleTabStaff").classList.toggle("active", role === "staff");
+  $("roleTabAdmin").classList.toggle("active", role === "admin");
+  $("loginSubmitBtn").textContent = role === "admin" ? "Đăng nhập Quản trị" : "Đăng nhập";
+  $("loginError").classList.add("hidden");
 }
 
 // ---------- Login ----------
@@ -91,12 +110,13 @@ $("loginForm").addEventListener("submit", function (e) {
 
   if (!username || !password) return;
 
+  const isAdmin = state.role === "admin";
   showOverlay("Đang đăng nhập...");
-  callApi({ action: "login", username, password })
+  callApi({ action: isAdmin ? "adminLogin" : "login", username, password })
     .then((res) => {
       if (res.success) {
-        saveSession();
-        return enterChecklist();
+        saveSession(state.role);
+        return isAdmin ? enterAdmin() : enterChecklist();
       } else {
         errEl.textContent = res.message || "Sai tên đăng nhập hoặc mật khẩu.";
         errEl.classList.remove("hidden");
@@ -111,6 +131,10 @@ $("loginForm").addEventListener("submit", function (e) {
 });
 
 $("logoutBtn").addEventListener("click", function () {
+  clearSession();
+  location.reload();
+});
+$("adminLogoutBtn").addEventListener("click", function () {
   clearSession();
   location.reload();
 });
@@ -442,12 +466,239 @@ $("homeBtn").addEventListener("click", function () {
   enterChecklist();
 });
 
+// ============ ADMIN ============
+
+const CA_LIST = [
+  "Ca sáng (06:00–14:00)",
+  "Ca chiều (14:00–22:00)",
+  "Ca đêm (22:00–06:00)",
+];
+
+function enterAdmin() {
+  showView("admin");
+  const today = new Date();
+  const weekAgo = new Date();
+  weekAgo.setDate(today.getDate() - 6);
+  $("adminTuNgay").value = toISO(weekAgo);
+  $("adminDenNgay").value = toISO(today);
+  state.admin.selectedIds = new Set();
+  return loadAdminStats();
+}
+
+function toISO(d) {
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return d.getFullYear() + "-" + mm + "-" + dd;
+}
+
+$("adminFilterBtn").addEventListener("click", loadAdminStats);
+
+function loadAdminStats() {
+  const tuNgay = $("adminTuNgay").value;
+  const denNgay = $("adminDenNgay").value;
+  if (!tuNgay || !denNgay) {
+    showToast("Vui lòng chọn đủ Từ ngày và Đến ngày.", true);
+    return;
+  }
+  state.admin.selectedIds = new Set();
+  showOverlay("Đang tải thống kê...");
+  return callApi({ action: "adminStats", tuNgay, denNgay })
+    .then((res) => {
+      if (!res.success) throw new Error(res.message || "Không tải được thống kê");
+      state.admin.missing = res.missing || [];
+      state.admin.failed = res.failedItems || [];
+      renderAdminMissing();
+      renderAdminFailed();
+      renderAdminComposeToggle();
+      $("adminComposePanel").classList.add("hidden");
+    })
+    .catch((err) => {
+      showToast(err.message || "Không tải được thống kê.", true);
+      console.error(err);
+    })
+    .finally(hideOverlay);
+}
+
+function renderAdminMissing() {
+  const box = $("adminMissingBox");
+  const missing = state.admin.missing;
+
+  if (!missing.length) {
+    box.innerHTML = '<div class="admin-empty-note">Không có ca nào bị thiếu checklist trong khoảng đã chọn.</div>';
+    return;
+  }
+
+  // nhóm theo ngày
+  const byDate = {};
+  missing.forEach((m) => {
+    if (!byDate[m.ngay]) byDate[m.ngay] = [];
+    byDate[m.ngay].push(m.ca);
+  });
+
+  let html = "";
+  Object.keys(byDate).forEach((ngay) => {
+    html += '<div class="admin-missing-day">' +
+      '<div class="admin-missing-date">' + escHtml(ngay) + '</div>' +
+      '<div class="admin-missing-chips">' +
+      byDate[ngay].map((ca) => '<span class="admin-chip">' + escHtml(ca) + '</span>').join("") +
+      "</div></div>";
+  });
+  box.innerHTML = html;
+}
+
+function escHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str == null ? "" : String(str);
+  return div.innerHTML;
+}
+
+function renderAdminFailed() {
+  const box = $("adminFailedBox");
+  const items = state.admin.failed;
+
+  if (!items.length) {
+    box.innerHTML = '<div class="admin-empty-note">Không có hạng mục Không đạt nào trong khoảng đã chọn.</div>';
+    return;
+  }
+
+  let html =
+    '<div class="admin-failed-toolbar">' +
+    '<label><input type="checkbox" id="adminSelectAll"> Chọn tất cả (' + items.length + ' mục)</label>' +
+    '<span id="adminSelectedCount">Đã chọn 0</span>' +
+    "</div>";
+
+  items.forEach((it) => {
+    const thumb = it.linkAnh
+      ? '<img class="admin-failed-thumb" src="' + it.linkAnh + '" alt="Ảnh minh chứng">'
+      : '<div class="admin-failed-thumb"></div>';
+    html +=
+      '<div class="admin-failed-card">' +
+      '<input type="checkbox" class="admin-item-check" data-id="' + it.id + '">' +
+      thumb +
+      '<div class="admin-failed-body">' +
+      '<div class="admin-failed-title">#' + escHtml(it.stt) + " — " + escHtml(it.hangMuc) + "</div>" +
+      '<div class="admin-failed-meta">' + escHtml(it.ngay) + " · " + escHtml(it.ca) + " · " + escHtml(it.nguoiThucHien) + "</div>" +
+      (it.ghiChu ? '<div class="admin-failed-note">' + escHtml(it.ghiChu) + "</div>" : "") +
+      "</div></div>";
+  });
+
+  box.innerHTML = html;
+
+  $("adminSelectAll").addEventListener("change", (e) => {
+    const checked = e.target.checked;
+    document.querySelectorAll(".admin-item-check").forEach((cb) => {
+      cb.checked = checked;
+      toggleAdminSelect(cb.dataset.id, checked);
+    });
+    updateAdminSelectedCount();
+    renderAdminComposeToggle();
+  });
+
+  document.querySelectorAll(".admin-item-check").forEach((cb) => {
+    cb.addEventListener("change", (e) => {
+      toggleAdminSelect(e.target.dataset.id, e.target.checked);
+      updateAdminSelectedCount();
+      renderAdminComposeToggle();
+    });
+  });
+}
+
+function toggleAdminSelect(id, checked) {
+  if (checked) state.admin.selectedIds.add(id);
+  else state.admin.selectedIds.delete(id);
+}
+
+function updateAdminSelectedCount() {
+  const countEl = $("adminSelectedCount");
+  if (countEl) countEl.textContent = "Đã chọn " + state.admin.selectedIds.size;
+}
+
+function renderAdminComposeToggle() {
+  const wrap = $("adminFailedBox");
+  let btnWrap = document.getElementById("adminComposeBtnWrap");
+  const hasSelection = state.admin.selectedIds.size > 0;
+
+  if (!state.admin.failed.length) {
+    if (btnWrap) btnWrap.remove();
+    return;
+  }
+
+  if (!btnWrap) {
+    btnWrap = document.createElement("div");
+    btnWrap.id = "adminComposeBtnWrap";
+    btnWrap.className = "admin-compose-btn-wrap";
+    btnWrap.innerHTML = '<button type="button" id="adminOpenComposeBtn" class="btn btn-primary btn-block">Soạn email cho mục đã chọn</button>';
+    wrap.after(btnWrap);
+    btnWrap.querySelector("#adminOpenComposeBtn").addEventListener("click", openAdminCompose);
+  }
+
+  const btn = btnWrap.querySelector("#adminOpenComposeBtn");
+  btn.disabled = !hasSelection;
+  btn.textContent = hasSelection
+    ? "Soạn email cho " + state.admin.selectedIds.size + " mục đã chọn"
+    : "Chọn ít nhất 1 hạng mục để gửi email";
+}
+
+function openAdminCompose() {
+  const ids = Array.from(state.admin.selectedIds);
+  const selectedItems = state.admin.failed.filter((it) => ids.includes(String(it.id)));
+  $("adminComposeSummary").textContent =
+    "Đã chọn " + selectedItems.length + " hạng mục: " +
+    selectedItems.map((it) => "#" + it.stt).join(", ");
+  $("adminRecipientEmail").value = "";
+  $("adminMessage").value = "";
+  $("adminSendError").classList.add("hidden");
+  $("adminComposePanel").classList.remove("hidden");
+  $("adminComposePanel").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+$("adminCancelSendBtn").addEventListener("click", function () {
+  $("adminComposePanel").classList.add("hidden");
+});
+
+$("adminSendBtn").addEventListener("click", function () {
+  const errEl = $("adminSendError");
+  errEl.classList.add("hidden");
+
+  const recipientEmail = $("adminRecipientEmail").value.trim();
+  const message = $("adminMessage").value.trim();
+  const itemIds = Array.from(state.admin.selectedIds).map(Number);
+
+  if (!recipientEmail) {
+    errEl.textContent = "Vui lòng nhập email người nhận.";
+    errEl.classList.remove("hidden");
+    return;
+  }
+  if (!itemIds.length) {
+    errEl.textContent = "Chưa có hạng mục nào được chọn.";
+    errEl.classList.remove("hidden");
+    return;
+  }
+
+  showOverlay("Đang gửi email...");
+  callApi({ action: "adminSendEmail", recipientEmail, message, itemIds })
+    .then((res) => {
+      if (!res.success) throw new Error(res.message || "Gửi email thất bại");
+      showToast("Đã gửi email cho " + res.sentCount + " hạng mục.");
+      $("adminComposePanel").classList.add("hidden");
+    })
+    .catch((err) => {
+      errEl.textContent = err.message || "Gửi email thất bại. Vui lòng thử lại.";
+      errEl.classList.remove("hidden");
+      console.error(err);
+    })
+    .finally(hideOverlay);
+});
+
 // ---------- Boot ----------
 (function init() {
   if (APPS_SCRIPT_URL.indexOf("PASTE_") === 0) {
     showToast("Chưa cấu hình APPS_SCRIPT_URL trong config.js", true);
   }
-  if (hasSession()) {
+  const session = getSession();
+  if (session && session.role === "admin") {
+    enterAdmin();
+  } else if (session) {
     enterChecklist();
   } else {
     showView("login");

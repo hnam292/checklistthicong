@@ -24,6 +24,11 @@
       <h1 class="login-title">Checklist Giám sát<br>Thi công</h1>
       <p class="login-subtitle">Nhà ga T2 · Da Nang International Terminal</p>
 
+      <div class="role-tabs" role="tablist">
+        <button type="button" class="role-tab active" data-role="staff" id="roleTabStaff">Nhân viên</button>
+        <button type="button" class="role-tab" data-role="admin" id="roleTabAdmin">Quản trị</button>
+      </div>
+
       <form id="loginForm" class="card login-card">
         <label for="username">Tên đăng nhập</label>
         <input id="username" name="username" type="text" placeholder="Nhập tên đăng nhập" autocomplete="username" required>
@@ -33,7 +38,7 @@
 
         <div id="loginError" class="field-error hidden"></div>
 
-        <button type="submit" class="btn btn-primary btn-block">Đăng nhập</button>
+        <button type="submit" id="loginSubmitBtn" class="btn btn-primary btn-block">Đăng nhập</button>
       </form>
 
       <p class="login-footer">© AHT — Da Nang International Terminal</p>
@@ -94,6 +99,63 @@
     <div class="submit-bar">
       <div id="submitError" class="field-error hidden"></div>
       <button id="submitBtn" class="btn btn-primary btn-block" type="button">Hoàn tất &amp; Gửi báo cáo</button>
+    </div>
+  </section>
+
+  <!-- ============ VIEW: ADMIN ============ -->
+  <section id="view-admin" class="view hidden">
+    <header class="app-header">
+      <img src="logo.png" alt="Logo AHT" class="header-logo">
+      <div>
+        <div class="header-title">Trang Quản trị</div>
+        <div class="header-subtitle">Checklist Thi công · Nhà ga T2</div>
+      </div>
+      <button id="adminLogoutBtn" class="header-logout" type="button" aria-label="Đăng xuất">Đăng xuất</button>
+    </header>
+
+    <div class="admin-scroll">
+
+      <div class="card admin-filter-card">
+        <div class="admin-filter-row">
+          <div class="info-row">
+            <label for="adminTuNgay">Từ ngày</label>
+            <input id="adminTuNgay" type="date">
+          </div>
+          <div class="info-row">
+            <label for="adminDenNgay">Đến ngày</label>
+            <input id="adminDenNgay" type="date">
+          </div>
+        </div>
+        <button id="adminFilterBtn" type="button" class="btn btn-primary btn-block">Xem thống kê</button>
+      </div>
+
+      <!-- Mục 1: Ca bị thiếu checklist -->
+      <div class="admin-section-title">Ca bị thiếu checklist</div>
+      <div id="adminMissingBox"></div>
+
+      <!-- Mục 2: Hạng mục Không đạt -->
+      <div class="admin-section-title">Hạng mục Không đạt trong khoảng thời gian</div>
+      <div id="adminFailedBox"></div>
+
+      <!-- Mục 3: khung soạn email -->
+      <div id="adminComposePanel" class="card admin-compose-panel hidden">
+        <div class="admin-compose-title">Soạn email gửi hạng mục đã chọn</div>
+        <div id="adminComposeSummary" class="admin-compose-summary"></div>
+
+        <label for="adminRecipientEmail">Email người nhận</label>
+        <input id="adminRecipientEmail" type="text" placeholder="vd: a@aht.com.vn, b@aht.com.vn">
+
+        <label for="adminMessage">Nội dung email</label>
+        <textarea id="adminMessage" rows="4" placeholder="Nhập nội dung gửi kèm (không bắt buộc)..."></textarea>
+
+        <div id="adminSendError" class="field-error hidden"></div>
+
+        <div class="admin-compose-actions">
+          <button id="adminCancelSendBtn" type="button" class="btn btn-outline btn-block">Hủy</button>
+          <button id="adminSendBtn" type="button" class="btn btn-primary btn-block">Gửi email</button>
+        </div>
+      </div>
+
     </div>
   </section>
 
