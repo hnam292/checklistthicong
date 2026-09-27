@@ -39,8 +39,10 @@ Tạo 1 Google Sheet mới với **đúng 3 tab** sau (tên tab phải khớp ch
 ### Tab `KetQuaChecklist`
 Chỉ cần tạo tab trống với đúng dòng tiêu đề (Apps Script sẽ tự ghi dữ liệu vào các dòng tiếp theo):
 
-| Timestamp | Ngay | Ca | NguoiThucHien | Email | STT | HangMuc | TinhTrang | GhiChu | LinkAnh |
-|---|---|---|---|---|---|---|---|---|---|
+| Timestamp | Ngay | Ca | ViTriGiamSat | NguoiThucHien | Email | STT | HangMuc | TinhTrang | GhiChu | LinkAnh |
+|---|---|---|---|---|---|---|---|---|---|---|
+
+> **Nếu bạn đang cập nhật từ bản trước** (đã có sẵn dữ liệu trong `KetQuaChecklist`): bấm chuột phải vào **tên cột D (NguoiThucHien)** → **Insert 1 column left** → đặt tên cột D mới là `ViTriGiamSat`. Google Sheet sẽ tự dịch toàn bộ dữ liệu cũ từ cột D trở đi sang phải 1 cột, không mất dữ liệu. Các dòng dữ liệu cũ sẽ có ô `ViTriGiamSat` để trống (vì lúc đó chưa có trường này) — không ảnh hưởng gì, chỉ đơn giản là chưa biết vị trí của các lần chấm cũ.
 
 > Ghi nhớ **Sheet ID** — chuỗi ký tự trong URL của Google Sheet:
 > `https://docs.google.com/spreadsheets/d/`**`SHEET_ID_Ở_ĐÂY`**`/edit`
