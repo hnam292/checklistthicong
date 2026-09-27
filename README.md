@@ -14,25 +14,21 @@ tự động lưu vào Google Sheet, tạo PDF và gửi email báo cáo.
 
 ## 1. Tạo Google Sheet
 
-Tạo 1 Google Sheet mới với **đúng 4 tab** sau (tên tab phải khớp chính xác):
+Tạo 1 Google Sheet mới với **đúng 3 tab** sau (tên tab phải khớp chính xác):
 
 ### Tab `TaiKhoan`
-| Username | Password |
-|---|---|
-| giamsat1 | 123456 |
+| Username | Password | Name | Email |
+|---|---|---|---|
+| giamsat1 | 123456 | Nguyễn Đình Hoàng Nam | nam.nguyen@aht.com.vn |
+
+> Mỗi tài khoản = đúng 1 người thực hiện checklist — **không dùng chung tài khoản cho nhiều người**, vì hệ thống tự lấy Name/Email của đúng tài khoản đang đăng nhập làm "Người thực hiện", không cần chọn lại. Nếu 1 tài khoản chưa kịp điền Name/Email, hệ thống vẫn cho đăng nhập bình thường — tạm dùng Username làm tên hiển thị và bỏ qua gửi email cá nhân cho tài khoản đó.
 
 ### Tab `TaiKhoanAdmin`
 | Username | Password |
 |---|---|
 | admin | matkhau_admin_ban_tu_chon |
 
-> Tab riêng cho tài khoản **Trang Quản trị** — tách biệt hoàn toàn với tài khoản nhân viên chấm checklist ở tab `TaiKhoan`. Bạn tự thêm tài khoản admin vào đây, không giới hạn số lượng.
-
-### Tab `NhanSu`
-| STT | Ten | Email |
-|---|---|---|
-| 1 | Nguyễn Đình Hoàng Nam | nam.nguyen@aht.com.vn |
-| 2 | Đặng Trần Nguyên | nguyen.dang@aht.com.vn |
+> Tab riêng cho tài khoản **Trang Quản trị** — tách biệt hoàn toàn với tài khoản nhân viên ở tab `TaiKhoan`. Bạn tự thêm tài khoản admin vào đây, không giới hạn số lượng.
 
 ### Tab `DanhMuc`
 | STT | HangMuc |
@@ -152,5 +148,4 @@ Apps Script chỉ cho chọn khung giờ 1 tiếng (không chọn được chín
 
 - **`MANAGER_EMAIL`** trong `Code.gs`: hiện để trống theo yêu cầu, bạn tự điền khi có.
 - **Nội dung 20 hạng mục**: sửa trực tiếp trên tab `DanhMuc`, không cần sửa code — app tự tải lại mỗi lần vào checklist.
-- **Danh sách nhân sự**: thêm/sửa trực tiếp trên tab `NhanSu`.
-- **Thêm tài khoản đăng nhập**: thêm dòng mới trong tab `TaiKhoan`.
+- **Thêm nhân viên / tài khoản đăng nhập mới**: thêm 1 dòng mới trong tab `TaiKhoan` (Username, Password, Name, Email) — mỗi dòng là 1 người, không dùng chung tài khoản.
